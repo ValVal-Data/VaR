@@ -1,0 +1,5 @@
+Global-CorpBond	20
+Gold	20
+SXI-RealEstate	20
+MSCI-ACWI	20
+EUR	20
