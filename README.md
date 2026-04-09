@@ -16,7 +16,7 @@ The analysis is designed as a model selection exercise rather than a single-mode
 - Portfolio tail risk is more sensitive to volatility stress than to correlation stress.
 
 
-# 1.1 Table of content
+# 1.i Table of content
 1. Overview
     1. Table of content
 2. Key features
@@ -63,9 +63,9 @@ The analysis is designed as a model selection exercise rather than a single-mode
 - Modular Python implementation for reproducibility and extension
 
 # 3. Data and Protfolio
-## 3.1 Data sources
+## 3.i Data sources
 Weekly data were collected over a 5‑year period.
-### 3.1.1 ETFs
+### 3.i.a ETFs
 | Provider | Fund Name | ISIN | Currency | Dividend Type | Last Data Point |
 |----------|-----------|------|----------|---------------|-----------------|
 | IShare | MSCI ACWI | USD | Acc | IE00B6R52259 | 23.03.2026 |
@@ -73,28 +73,28 @@ Weekly data were collected over a 5‑year period.
 | UBS | Gold | CH0106027193 | USD | Dis | 23.03.2026 |
 | IShare | Global Corp Bond | IE00B988C465 | CHF | Dis | 23.03.2026 |
 
-### 3.1.2 Currency Rates
+### 3.i.b Currency Rates
 | Pair | Last Data Point |
 |------|-----------------|
 | USD/CHF | 23.03.2026 |
 | EUR/CHF | 23.03.2026 |
 
-## 3.2 Portfolio Composition
+## 3.ii Portfolio Composition
 - The portfolio was designed to provide broad geographic exposure and include multiple asset classes (equities, bonds, gold, real estate, FX).
 - The portfolio allocation is provided in `Portfolio.txt`.
 
 # 4. Methodology
-### 4.1 Risk measures
+### 4.i Risk measures
 - VaR is defined as the negative 2.5th percentile of the 1-week profit-and-loss distribution.
 - ES is defined as the conditional mean loss beyond the VaR threshold.
 
-### 4.2 Model comparison
+### 4.ii Model comparison
 The analysis compares three classes of risk models:
 - Historical simulation
 - Parametric models
 - Monte Carlo simulation
 
-### 4.3 Parametric and simulation specifications
+### 4.iii Parametric and simulation specifications
 The following specifications are evaluated:
 - Historical simulation
 - Gaussian parametric model
@@ -104,7 +104,7 @@ The following specifications are evaluated:
 - CCC-GARCH(1,1) with Student-t innovations
 - CCC-GARCH(1,1) with skewed-t innovations
 
-### 4.4 Model selection logic
+### 4.iv Model selection logic
 The models are assessed sequentially using:
 - distribution diagnostics,
 - heteroskedasticity tests,
@@ -113,7 +113,7 @@ The models are assessed sequentially using:
 - and VaR backtesting.
 The final model is selected on the basis of empirical adequacy rather than model complexity alone. In this dataset, CCC-GARCH(1,1) with skewed-t innovations delivered the most credible tail-risk estimates and the strongest overall backtesting performance.
 
-### 4.5 Key assumptions and limitations
+### 4.v Key assumptions and limitations
 - Volatility is time-varying and modeled dynamically.
 - Cross-asset dependence is captured through a constant conditional correlation (CCC) structure.
 - Innovation distributions may be non-Gaussian, heavy-tailed, and asymmetric.
@@ -151,22 +151,22 @@ The final model is selected on the basis of empirical adequacy rather than model
     Open and execute: `Main.ipynb`
 
 # 7. Results
-## 7.1 Distributions
+## 7.i Distributions
 ![Return distributions](Figures/ReturnDistribution.png)
 Returns are not gaussian distributed for all assets. They also show some asymmetry and large tail. This explain why skewed-t distribution, which provide both the tailing of student-t distribution and asymetry, supports the adequacy of the specification.
 
-## 7.2 VaR and ES
+## 7.ii VaR and ES
 ![VaR from Historical data](Figures/HistoricalVaR.png)
 ![VaR from MC simulation](Figures/GARCHVaR.png)
 The gap between historical and Monte Carlo estimates suggests that a volatility-sensitive model places more weight on recent market conditions than a long-window historical estimator. This is consistent with the idea that historical simulation can dilute current risk when calm and stressed regimes are pooled together.
 
 # 8. Validation and testing
-### 8.1 Distribution diagnostics
+### 8.i Distribution diagnostics
 ![Residual distribution](Figures/ResidualDistribution.png)
 ![Residual QQ plots](Figures/ResidualQQ.png)
 Residual diagnostics indicate that the GARCH-based specifications materially improve the fit relative to simpler models. In particular, allowing for heavy tails and asymmetry produces residual behavior that is more consistent with the empirical return distribution.
 
-### 8.2 Monte Carlo convergence
+### 8.ii Monte Carlo convergence
 ![Simulation with n=100](Figures/Returns100.png)
 ![Simulation with n=1000](Figures/Returns1000.png)
 ![Simulation with n=10000](Figures/Returns10000.png)
@@ -174,17 +174,17 @@ Residual diagnostics indicate that the GARCH-based specifications materially imp
 Monte Carlo convergence was assessed by comparing simulated return distributions and VaR estimates across increasing numbers of simulation paths (10^2, 10^3, 10^4, and 10^5). As the number of simulations increases, both the shape of the distribution and tail quantiles stabilize, indicating diminishing Monte Carlo error.
 Although convergence appears satisfactory with approximately 1,000–10,000 simulations, 100,000 paths are retained in the final analysis to reduce estimation noise in extreme quantiles and improve the stability of ES estimates.
 
-### 8.3 Backtesting
+### 8.iii Backtesting
 ![Cumulative Exception rate](Figures/CumulativeExceptionRate.png)
 Backtesting shows that the selected skewed-t GARCH specification provides exception rates and exception dynamics that are consistent with the target confidence level. This supports the use of the model for portfolio-level tail-risk measurement over the sample considered.
 
-## 8.4 Benchmarking
+## 8.iv Benchmarking
 ![VaR from Historical data](Figures/HistoricalVaR.png)
 ![VaR from MC simulation](Figures/GARCHVaR.png)
 Again, there is a difference that might be explained by current economic situation.
 
-## 8.5 Stress testing
-### 8.5.1 Stress multiplier
+## 8.v Stress testing
+### 8.v.a Stress multiplier
 | Scenario | Global-CorpBond | MSCI-ACWI | Gold | SXI-RealEstate | EUR |
 |----------|-----------------|-----------|------|----------------|-----|
 | Model | 1.0 | 1.0 | 1.0 | 1.0 | 1.0 |
@@ -194,7 +194,7 @@ Again, there is a difference that might be explained by current economic situati
 
 Volatility stress produces a significantly higher VaR/ES multiplier than correlation stress. This indicates that the portfolio's tail risk is primarily driven by volatility shocks rather than by correlation breakdowns. 
 
-### 8.5.2 Tail risk ratio
+### 8.v.b Tail risk ratio
 | Scenario | Global-CorpBond | MSCI-ACWI | Gold | SXI-RealEstate | EUR |
 |----------|-----------------|-----------|------|----------------|-----|
 | Model | 1.3 | 1.3 | 1.3 | 1.3 | 1.3 |
@@ -204,7 +204,7 @@ Volatility stress produces a significantly higher VaR/ES multiplier than correla
 
 The ES/VaR ratio remains relatively stable across stress scenarios, suggesting that stress primarily scales loss magnitude rather than materially altering tail shape. This is consistent with the linear nature of the portfolio, which does not contain strongly nonlinear payoffs such as options.
 
-## 8.6 Model selection summary
+## 8.vi Model selection summary
 The following table summarizes the risk models considered, their main assumptions, validation results, and the rationale for model acceptance or rejection.
 
 | Model | Key assumptions | Diagnostics & backtesting | Assessment |
