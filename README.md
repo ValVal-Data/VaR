@@ -235,19 +235,21 @@ Rather than relying on a single methodology, the analysis benchmarks historical 
 
 
 # 11. Project structure
+```
 VaR/
-|- Data/
-|- Figures/
-|- Source/
-|   |- Distribution.py
-|   |- MonteCarlo.py
-|   |- Plot.py
-|   |- StatTest.py
-|   |- Utils.py
-|- Main.ipynb
-|- Portfolio.txt
-|- README.txt
-|- Requirements.txt
+|-- Data/
+|-- Figures/
+|-- Source/
+|   |-- Distribution.py
+|   |-- MonteCarlo.py
+|   |-- Plot.py
+|   |-- StatTest.py
+|   `-- Utils.py
+|-- Main.ipynb
+|-- Portfolio.txt
+|-- README.txt
+`-- Requirements.txt
+```
 
 # 12. Future improvements
 - Use deep learning for volatility prediction
