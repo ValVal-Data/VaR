@@ -53,12 +53,12 @@ def loadAll():
     filesCur=gb.glob("Data/*Cur.dat")
 
     #Extract info from name
-    name=[f.split('_')[1] for f in filesClose]
+    name=[f.split('_')[0].split('\\')[1] for f in filesClose]
     currency=[f.split('_')[-3] for f in filesClose]
     distrib=[f.split('_')[-2] for f in filesClose]
     info={na: {"Currency":cu,"Type":ty} for na, cu, ty in zip(name,currency,distrib)}
     nameC=[f.split('-')[0].split('\\')[1] for f in filesCur]
-    nameDiv=[f.split('_')[1] for f in filesDiv]
+    nameDiv=[f.split('_')[0].split('\\')[1] for f in filesDiv]
 
     #Load data
     dataClose=[load(f) for f in filesClose]
