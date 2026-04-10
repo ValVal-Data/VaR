@@ -68,8 +68,8 @@ Weekly data were collected over a 5‑year period.
 ### 3.i.a ETFs
 | Provider | Fund Name | ISIN | Currency | Dividend Type | Last Data Point |
 |----------|-----------|------|----------|---------------|-----------------|
-| IShare | MSCI ACWI | USD | Acc | IE00B6R52259 | 23.03.2026 |
-| UBS | SXI Real Estate | CHF | Dis | CH0124758522 | 23.03.2026 |
+| IShare | MSCI ACWI | IE00B6R52259 | USD | Acc | 23.03.2026 |
+| UBS | SXI Real Estate | CH0124758522 | CHF | Dis | 23.03.2026 |
 | UBS | Gold | CH0106027193 | USD | Dis | 23.03.2026 |
 | IShare | Global Corp Bond | IE00B988C465 | CHF | Dis | 23.03.2026 |
 
