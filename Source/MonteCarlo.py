@@ -40,7 +40,7 @@ class MCSim:
         pdf_vals (np.array): Calculation of PDF for t-skewed distribution to make code faster
         xs (np.array): list of point for calculation of PDF and CDF
     """
-    def __init__(self,initial_values,volh,drift,step,horizon,nbsim,q):
+    def __init__(self,initial_values:pan.DataFrame,volh:list,drift:float,step:int,horizon:int,nbsim:int,q:float)->None:
         self.s0=initial_values
         self.volh=volh
         self.drift=drift
@@ -49,7 +49,7 @@ class MCSim:
         self.nbsim=nbsim
         self.q=q
         self.stress=1
-    def set_garch(self,corrst,param,var,l,dist="gaussian"):
+    def set_garch(self,corrst:pan.DataFrame,param:list,var:list,l:np.array,dist:str="gaussian")->None:
         """
         Set attributes for CCC-GARCH
 
@@ -69,7 +69,7 @@ class MCSim:
         self.var=var
         self.s_1=self.s0*np.exp(-l)
         self.dist=dist
-    def simulate_paths_hist(self):
+    def simulate_paths_hist(self)->np.array:
         """
         simulate paths using historical variance
 
@@ -88,7 +88,7 @@ class MCSim:
                 path.append(price)
             paths.append(path)
         return np.array(paths)
-    def simulate_paths_GARCH(self):
+    def simulate_paths_GARCH(self)->np.array:
         """
         simulate paths using CCC-GARCH
 
@@ -134,7 +134,7 @@ class MCSim:
             sigmas.append(sigma)
             paths.append(path)
         return np.array(paths[1:])
-    def VaR(self,gar):
+    def VaR(self,gar:bool)->list:
         """
         Calculation of Value at Risk and Expected Shortfall
 
@@ -156,7 +156,7 @@ class MCSim:
         es=[pl[:,i][pl[:,i]>var_95[i]].mean() for i in range(len(var_95))]
         return np.abs(var_95), np.abs(es)
     #Create grid to interpolate cdf and ppf to make code faster
-    def make_t_skewed_cdf(self):
+    def make_t_skewed_cdf(self)->None:
         """
         Make t-skewed cdf
 
@@ -169,7 +169,7 @@ class MCSim:
             temp/=temp[-1]
             self.cdf_vals.append(temp)
         self.cdf_vals=np.asarray(self.cdf_vals)
-    def make_t_skewed_pdf(self):
+    def make_t_skewed_pdf(self)->None:
         """
         Make t-skewed pdf
 
@@ -182,7 +182,7 @@ class MCSim:
         for i in range(len(nu)):
             self.pdf_vals.append(t_skewed_pdf(self.xs,nu[i],lam[i]))
         self.pdf_vals=np.asarray(self.pdf_vals)
-    def t_skewed_cdf(self,x):
+    def t_skewed_cdf(self,x:float)->np.array:
         """
         Return t-skewed cdf
 
@@ -190,13 +190,13 @@ class MCSim:
             x (float): Where to calculate cdf
 
         Returns:
-            cdf at x
+            cdf (np.array)
         """
         r=[]
         for i in range(len(self.cdf_vals)):
             r.append(np.interp(x,self.xs,self.cdf_vals[i]))
         return np.asarray(r)
-    def t_skewed_ppf(self,x):
+    def t_skewed_ppf(self,x:float)->np.array:
         """
         Return t-skewed ppf
 
@@ -204,7 +204,7 @@ class MCSim:
             x (float): Where to calculate ppf
 
         Returns:
-            ppf at x
+            ppf (np.array)
         """
         r=[]
         for i in range(len(self.cdf_vals)):

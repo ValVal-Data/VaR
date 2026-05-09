@@ -8,3 +8,4 @@ __pycache__/
 .ipynb_checkpoints/Portfolio-checkpoint.txt
 .ipynb_checkpoints/requirements-checkpoint.txt
 Data/
+*code-workspace

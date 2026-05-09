@@ -9,7 +9,7 @@ import scipy.optimize as op
 from Source.Distribution import *
 
 
-def load(pth):
+def load(pth:str)->pan.DataFrame:
     """
     File loading of temporal asset data
 
@@ -29,7 +29,7 @@ def load(pth):
     return(data)
     
 #Load all files in Data
-def loadAll():
+def loadAll()->list:
     """
     Load multiple files contain in set files
 
@@ -98,7 +98,7 @@ def loadAll():
     dataClose["Total"]=dataClose.sum(axis=1)
     return((dataClose,dataDiv, dataCur,info))
 
-def returnsP(data):
+def returnsP(data:pan.DataFrame)->pan.DataFrame:
     """
     Calculate returns in percentage r=(p1-p0)/p0*100
 
@@ -111,11 +111,11 @@ def returnsP(data):
     """
     histVar=data.copy(deep=True)
     for fund in data.columns:
-        histVar[fund]=(-data[fund]+data[fund].shift(1))/data[fund]*100
+        histVar[fund]=(data[fund]-data[fund].shift(1))/data[fund].shift(1)*100
     histVar=histVar.dropna()
     return(histVar)
 
-def returnsL(data):
+def returnsL(data:pan.DataFrame)->pan.DataFrame:
     """
     Calculate returns log returns lr=log(p1/p0)
 
@@ -128,11 +128,11 @@ def returnsL(data):
     """
     histVar=data.copy(deep=True)
     for fund in data.columns:
-        histVar[fund]=np.log(data[fund].shift(1)/data[fund])
+        histVar[fund]=np.log(data[fund]/data[fund].shift(1))
     histVar=histVar.dropna()
     return(histVar)
 
-def garch_likelihood(param, r,dist="gaussian"):
+def garch_likelihood(param:list, r:pan.DataFrame,dist:str="gaussian")->float:
     """
     Calculate loglikelihood for GARCH fitting different distributions (Gaussian, Student-t, Skewed-t)
 
@@ -194,7 +194,7 @@ def garch_likelihood(param, r,dist="gaussian"):
     return(-np.sum(ll))
 
 
-def fitGARCH(logHistVar,dist="gaussian"):
+def fitGARCH(logHistVar:pan.DataFrame,dist:str="gaussian")->list:
     """
     Fit returns with GARCH model
 
@@ -228,7 +228,7 @@ def fitGARCH(logHistVar,dist="gaussian"):
     sr=np.array(sr).T
     return((sr,var,res))
 
-def calc_Garch(param,r,dist="gaussian"):
+def calc_Garch(param:pan.DataFrame,r:float,dist:str="gaussian")->list:
     """
     Calculate volatility for a certain set of parameter
 
@@ -255,7 +255,7 @@ def calc_Garch(param,r,dist="gaussian"):
         sigma2[i]=omega+alpha*r[i-1]**2+beta*sigma2[i-1]
     return np.sqrt(sigma2)
 
-def correlMap(logHistVar,dist="gaussian"):
+def correlMap(logHistVar:pan.DataFrame,dist:str="gaussian")->list:
     """
     Calculation of the correlation map, by fitting GARCH
 
@@ -280,7 +280,7 @@ def correlMap(logHistVar,dist="gaussian"):
         srr[name]=(srr[name]-srr[name].mean())/srr[name].var()
     return (srr.corr(),var,param,srr)
 
-def increase_corr(mat,alpha=0.3,rho=0.7):
+def increase_corr(mat:pan.DataFrame,alpha:float=0.3,rho:float=0.7)->pan.DataFrame:
     """
     Increase correlation of a matrix, while preseving positive and definite
 

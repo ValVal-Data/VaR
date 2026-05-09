@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import scipy.stats as scp
 import pandas as pan
 
-def plotPriceEvolution(data,title):
+def plotPriceEvolution(data:pan.DataFrame,title:str)->None:
     """
     Plot price evolution in % change (starting at 0)
 
@@ -23,7 +23,7 @@ def plotPriceEvolution(data,title):
     plt.title(title)
     plt.show()
 
-def plotBar(data1,data2,col,lim,name,lab1,lab2,title):
+def plotBar(data1:np.array,data2:np.array,col:list,lim:list,name:str,lab1:list,lab2:list,title:str)->None:
     """
     Two Bar Plots side by side to compare different values
 
@@ -54,7 +54,7 @@ def plotBar(data1,data2,col,lim,name,lab1,lab2,title):
     ax[1].set_ylim(lim)
     plt.show()
 
-def plotLineCompare(data1,data2,xlab,ylab,title1,title2,lim,titleG):
+def plotLineCompare(data1:np.array,data2:np.array,xlab:str,ylab:str,title1:list,title2:list,lim:tuple,titleG:str)->None:
     """
     Two line Plots side by side to compare different values
 
@@ -87,7 +87,7 @@ def plotLineCompare(data1,data2,xlab,ylab,title1,title2,lim,titleG):
     ax[1].legend(data2.columns,loc="lower left")
     plt.show()
 
-def checkVisualHeteroskedasticity(data,title):
+def checkVisualHeteroskedasticity(data:pan.DataFrame,title:str)->None:
     """
     List line plot with rolling average return to check visually heteroskedasticity
 
@@ -116,7 +116,7 @@ def checkVisualHeteroskedasticity(data,title):
     plt.show()
 
 
-def plotCorrMap(corr,logHistVar):
+def plotCorrMap(corr:pan.DataFrame,logHistVar:pan.DataFrame)->None:
     """
     Plot correlation map
 
@@ -142,7 +142,7 @@ def plotCorrMap(corr,logHistVar):
     cb.set_label("Correlation",fontsize=12)
     plt.show()
 
-def plotCompareCorrMap(corr,corr2,logHistVar):
+def plotCompareCorrMap(corr:pan.DataFrame,corr2:pan.DataFrame,logHistVar:pan.DataFrame)->None:
     """
     Plot 2 correlation map side by side to compare
 
@@ -184,7 +184,7 @@ def plotCompareCorrMap(corr,corr2,logHistVar):
     cb.set_label("Correlation",fontsize=12)
     plt.show()
 
-def plotResidual(srr,colors,title,bin=20):
+def plotResidual(srr:pan.DataFrame,colors:list,title:str,bin:int=20)->None:
     """
     Plot residual from GARCH
 
@@ -209,7 +209,7 @@ def plotResidual(srr,colors,title,bin=20):
     plt.tight_layout()
     plt.show()
 
-def plotDistrib(srr,colors,title,lim,bin=20):
+def plotDistrib(srr:pan.DataFrame,colors:list,title:str,lim:tuple,bin:int=20)->None:
     """
     Plot residual from GARCH
 
@@ -217,6 +217,7 @@ def plotDistrib(srr,colors,title,lim,bin=20):
         srr (pan.DataFrame): Data to plot
         colors (list): List of the color for the different lines
         title (str): Title of the plot
+        li, (tuple): Limit for the x axis
         bin (int, default=20): Number of bins
 
     Returns:
@@ -234,7 +235,7 @@ def plotDistrib(srr,colors,title,lim,bin=20):
     plt.tight_layout()
     plt.show()
 
-def plotCumulativeExcept(histVarP,t,alpha=0.025):
+def plotCumulativeExcept(histVarP:pan.DataFrame,t:list,alpha:float=0.025)->None:
     """
     Plot residual from GARCH
 

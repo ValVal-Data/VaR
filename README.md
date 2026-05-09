@@ -188,9 +188,9 @@ Again, there is a difference that might be explained by current economic situati
 | Scenario | Global-CorpBond | MSCI-ACWI | Gold | SXI-RealEstate | EUR |
 |----------|-----------------|-----------|------|----------------|-----|
 | Model | 1.0 | 1.0 | 1.0 | 1.0 | 1.0 |
-| Correlation stress | 1.0 | 1.3 | 1.2 | 1.0 | 1.0 |
-| Volatility stress | 2.3 | 3.0 | 2.3 | 4.0 | 2.9 |
-| Volatility+Correlation stress | 3.5 | 2.9 | 2.4 | 3.0 | 3.1 |
+| Correlation stress | 0.9 | 0.9 | 0.7 | 0.8 | 1.0 |
+| Volatility stress | 2.6 | 3.0 | 3.3 | 2.7 | 2.6 |
+| Volatility+Correlation stress | 2.6 | 3.1 | 3.4 | 2.5 | 3.5 |
 
 Volatility stress produces a significantly higher VaR/ES multiplier than correlation stress. This indicates that the portfolio's tail risk is primarily driven by volatility shocks rather than by correlation breakdowns. 
 
@@ -198,9 +198,9 @@ Volatility stress produces a significantly higher VaR/ES multiplier than correla
 | Scenario | Global-CorpBond | MSCI-ACWI | Gold | SXI-RealEstate | EUR |
 |----------|-----------------|-----------|------|----------------|-----|
 | Model | 1.3 | 1.3 | 1.3 | 1.3 | 1.3 |
-| Correlation stress | 1.1 | 1.4 | 1.1 | 1.1 | 1.2 |
-| Volatility stress | 1.5 | 1.2 | 1.2 | 1.1 | 1.2 |
-| Volatility+Correlation stress | 1.2 | 1.3 | 1.1 | 1.3 | 1.2 |
+| Correlation stress | 1.0 | 1.3 | 1.3 | 1.4 | 1.1 |
+| Volatility stress | 1.5 | 1.8 | 1.3 | 1.2 | 1.2 |
+| Volatility+Correlation stress | 1.4 | 1.2 | 1.2 | 1.3 | 1.2 |
 
 The ES/VaR ratio remains relatively stable across stress scenarios, suggesting that stress primarily scales loss magnitude rather than materially altering tail shape. This is consistent with the linear nature of the portfolio, which does not contain strongly nonlinear payoffs such as options.
 

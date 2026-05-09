@@ -6,7 +6,7 @@ import scipy.stats as scp
 import pandas as pan
 import scipy.optimize as op
 
-def checkDistribution(data,col,title):
+def checkDistribution(data:pan.DataFrame,col:list,title:str)->None:
     """
     Compare return distribution to gaussian one in individual subpanels
 
@@ -40,13 +40,14 @@ def checkDistribution(data,col,title):
     plt.tight_layout()
     plt.show()
 
-def checkDistributionQQ(data,col,title):
+def checkDistributionQQ(data:pan.DataFrame,col:list,title:str)->None:
     """
     QQplots with return distribution in individual subpanels
 
     Parameters:
-        data (float): Data to plot
+        data (pan.DataFrame): Data to plot
         col (list): List of colors
+        title (str): Title of the plot
 
     Returns:
         None, plot directly
@@ -73,7 +74,7 @@ def checkDistributionQQ(data,col,title):
     plt.tight_layout()
     plt.show()
 
-def checkDistributionQQ5(data,col,title):
+def checkDistributionQQ5(data:pan.DataFrame,col:list,title:str)->None:
     """
     QQplots with return distribution in individual subpanels for 5 plots in line
 
@@ -102,7 +103,7 @@ def checkDistributionQQ5(data,col,title):
     plt.tight_layout()
     plt.show()
 
-def normalityTest(data, alpha=0.05):
+def normalityTest(data:pan.DataFrame, alpha:float=0.05)->pan.DataFrame:
     """
     Perform Jarque_Bera and Anderson tests to check if data are normally distributed
 
@@ -121,7 +122,7 @@ def normalityTest(data, alpha=0.05):
     res=[["Reject"if x<alpha else "Fail to reject" for x in row] for row in [a,jb]]
     return(pan.DataFrame(res,columns=data.columns,index=["Anderson-Darling","Jarque-Bera"]).T.round(3))
 
-def ljung_box_test(x,cl=0.05,lag=10):
+def ljung_box_test(x:np.array,cl:float=0.05,lag:int=10)->str:
     """
     Perform Ljung-Box test to see if the variance is constant
 
@@ -151,7 +152,7 @@ def ljung_box_test(x,cl=0.05,lag=10):
         return("Reject")
     else:
         return("Fail to reject")
-def arch_lm_test(x,cl=0.05,lag=10):
+def arch_lm_test(x:np.array,cl:float=0.05,lag:int=10)->str:
     """
     Perform Arch-Lm test to see if the variance is constant
 
@@ -190,7 +191,7 @@ def arch_lm_test(x,cl=0.05,lag=10):
         return("Fail to reject")
 
 #R2 calc for engle_sheppard_test
-def regression_r2(x,y):
+def regression_r2(x:np.array,y:np.array)->float:
     """
     Calculation of R^2 for Engle-Sheppart test
 
@@ -209,7 +210,7 @@ def regression_r2(x,y):
 
     return (ssr/sst)
 
-def engle_sheppard_test(srr,corrst,lag=5,alpha=0.05):
+def engle_sheppard_test(srr:pan.DataFrame,corrst:pan.DataFrame,lag:int=5,alpha:float=0.05)->str:
     """
     Engle-Sheppart test to test if correlation is constant
 
@@ -245,7 +246,7 @@ def engle_sheppard_test(srr,corrst,lag=5,alpha=0.05):
         return("Fail to reject")
 
 
-def kupiec(histVar,t,alpha=0.025):
+def kupiec(histVar:pan.DataFrame,t:list,alpha:float=0.025)->str:
     """
     Kupiec test to check if the number of exception to the threhold is in line with confidence level
 
@@ -278,7 +279,7 @@ def kupiec(histVar,t,alpha=0.025):
     ex=np.asarray(ex)
     return lr, ex[:,1], ll
 
-def christoffersens(histVar,t,alpha=0.025):
+def christoffersens(histVar:pan.DataFrame,t:list,alpha:float=0.025)->list:
     """
     Christoffersen test on a DataFrame to check if the exceptions are independant and is in line with confidence level.
 
@@ -299,7 +300,7 @@ def christoffersens(histVar,t,alpha=0.025):
         res.append(christoffersen(np.asarray(histVar.iloc[:,i]),t[i],ku[i],alpha))
     return res
 
-def christoffersen(histVar,t,ku,alpha=0.025):
+def christoffersen(histVar:pan.DataFrame,t:float,ku:float,alpha:float=0.025)->list:
     """
     Christoffersen test on single data serie to check if the exceptions are independant and is in line with confidence level. 
 

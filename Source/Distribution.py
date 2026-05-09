@@ -7,7 +7,7 @@ import scipy.optimize as op
 
 #Skewed t-distribution according to Hansen 1994
 #Constant calculation
-def t_skewed_constants(nu,lam):
+def t_skewed_constants(nu:float,lam:float)->list:
     """
     Skewed t-distribution according to Hansen 1994 constant calculations
 
@@ -16,14 +16,14 @@ def t_skewed_constants(nu,lam):
         lam (float): lambda parameter
 
     Returns:
-        a,b,c (float): Parameters for the distribution
+        a,b,c (list): Parameters for the distribution
     """
     c=np.exp(sp.gammaln((nu+1)/2)-sp.gammaln(nu/2))/np.sqrt(np.pi*(nu-2))
     a=4*lam*c*(nu-2)/(nu-1)
     b=np.sqrt(1+3*nu**2-a**2)
     return a,b,c
 #Calculation of the pdf
-def t_skewed_pdf(z,nu,lam):
+def t_skewed_pdf(z:float,nu:float,lam:float)->float:
     """
     PDF calculation at z for Skewed t-distribution according to Hansen 1994 constant calculations
 
@@ -71,7 +71,7 @@ def t_skewed_pdf(z,nu,lam):
     else:
         return np.asarray(ll)
 
-def t_skewed_cdf(z,nu,lam):
+def t_skewed_cdf(z:float,nu:float,lam:float)->float:
     """
     CDF calculation at z for Skewed t-distribution according to Hansen 1994 constant calculations
 
@@ -89,7 +89,7 @@ def t_skewed_cdf(z,nu,lam):
     val, _=inte.quad(t_skewed_pdf,-np.inf,z,args=(nu,lam))
     return val
 
-def t_skewed_ppf(u,nu,lam):
+def t_skewed_ppf(u:float,nu:float,lam:float)->float:
     """
     PPF calculation at z for Skewed t-distribution according to Hansen 1994 constant calculations
 
@@ -106,7 +106,7 @@ def t_skewed_ppf(u,nu,lam):
     """
     return op.brentq(lambda x: t_skewed_cdf(x,nu,lam)-u,-5,5)
 
-def t_skewed_cdf(z,nu,lam):
+def t_skewed_cdf(z:float,nu:float,lam:float)->float:
     """
     CDF calculation at z for Skewed t-distribution according to Hansen 1994 constant calculations
 
