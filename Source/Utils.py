@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import scipy.stats as scp
 import pandas as pan
 import glob as gb
+import json
 import scipy.optimize as op
 from Source.Distribution import *
 
@@ -86,15 +87,14 @@ def loadAll()->list:
             dataClose[fund]*=dataCur[info[fund]["Currency"]]
 
     #Load portfolio and adjust values
-    port=pan.read_csv("Portfolio.txt",sep="\t",engine="python")
     dataClose/=list(dataClose.iloc[0])
-    with open("Portfolio.txt","r") as f:
-        for line in f:
-            l=line.split("\t")
-            if l[0] in ["CHF","USD","EUR"]:
-                dataClose[l[0]]=int(l[1])*dataCur[l[0]]/float(dataCur[l[0]].iloc[0])
+    with open("Portfolio.json","r") as f:
+        dico=json.load(f)
+        for elem in dico.keys():
+            if elem in ["CHF","USD","EUR"]:
+                dataClose[elem]=int(dico[elem])*dataCur[elem]/float(dataCur[elem].iloc[0])
             else:
-                dataClose[l[0]]*=int(l[1])
+                dataClose[elem]*=int(dico[elem])
     dataClose["Total"]=dataClose.sum(axis=1)
     return((dataClose,dataDiv, dataCur,info))
 
@@ -129,6 +129,23 @@ def returnsL(data:pan.DataFrame)->pan.DataFrame:
     histVar=data.copy(deep=True)
     for fund in data.columns:
         histVar[fund]=np.log(data[fund]/data[fund].shift(1))
+    histVar=histVar.dropna()
+    return(histVar)
+
+def returnsS(data:pan.DataFrame)->pan.DataFrame:
+    """
+    Calculate simple returns lr=p1/p0
+
+    Parameters:
+        data (pan.DataFrame): Data to convert
+
+    Returns:
+        histVar (pan.DataFrame)
+
+    """
+    histVar=data.copy(deep=True)
+    for fund in data.columns:
+        histVar[fund]=data[fund]/data[fund].shift(1)
     histVar=histVar.dropna()
     return(histVar)
 

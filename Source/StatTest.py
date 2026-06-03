@@ -6,6 +6,19 @@ import scipy.stats as scp
 import pandas as pan
 import scipy.optimize as op
 
+def autocorrelation(x):
+    y=x-np.mean(x)
+    res=np.correlate(y,y,mode='full')
+    acf=res[res.size//2:]
+    return acf/acf[0]
+
+def prob_cluster(x,center):
+    #Softmax over distances
+    d0=np.linalg.norm(x-center[0],axis=1)
+    d1=np.linalg.norm(x-center[1],axis=1)
+    p1=np.exp(-d1)/(np.exp(-d0)+np.exp(-d1))
+    return 1-p1
+
 def checkDistribution(data:pan.DataFrame,col:list,title:str)->None:
     """
     Compare return distribution to gaussian one in individual subpanels
