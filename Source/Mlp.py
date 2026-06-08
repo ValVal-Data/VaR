@@ -66,7 +66,44 @@ class Autoencoder(tr.nn.Module):
     def decode(self,x):
         return self.decoder(x)
 
+class VariationalAutoencoder(tr.nn.Module):
+    def __init__(self,dimensions:list,do:float)->None:
+        super().__init__()
+        dim=[int(x) for x in dimensions]
+        self.l1=tr.nn.Linear(dim[0],dim[1])
+        self.dropout=tr.nn.Dropout(p=do)
+        self.l_mu=tr.nn.Linear(dim[1],dim[2])
+        self.l_logvar=tr.nn.Linear(dim[1],dim[2])
 
+        self.l2=tr.nn.Linear(dim[2],dim[1])
+        self.l3=tr.nn.Linear(dim[1],dim[0])
+    
+    def forward(self,x):
+        mu,logvar=self.encode(x)
+        z=self.reparametrize(mu,logvar)
+        recon=self.decode(z)
+        return recon,mu,logvar
+    
+    def encode(self,x):
+        h=tr.nn.functional.relu(self.l1(x))
+        h=self.dropout(h)
+        mu=self.l_mu(h)
+        logvar=self.l_logvar(h)
+        return mu,logvar
+    
+    def decode(self,x):
+        h=self.l2(x)
+        return tr.torch.sigmoid(self.l3(h))
+
+    def reparametrize(self,mu,logvar):
+        std=tr.torch.exp(0.5*logvar)
+        eps=tr.torch.randn_like(std)
+        return mu+eps*std
+    
+def vae_loss(recon_x,x,mu,logvar):
+    recon_loss=tr.nn.functional.binary_cross_entropy(recon_x,x,reduction='sum')
+    kl=-0.5*tr.torch.sum(1+logvar-mu**2-logvar.exp())
+    return recon_loss+kl
 
 class TickData(tr.utils.data.Dataset):
     def __init__(self,df:pan.DataFrame,window_size:int)->None:
@@ -93,8 +130,8 @@ class TickData(tr.utils.data.Dataset):
         self.tar=np.array([me,vol,ske,kur,cumret,z]).astype(np.float32)
         #Normalize data
         for i in range(self.tar.shape[0]):
-            self.reg=np.max(abs(self.tar[i]))
-            self.tar[i]/=self.reg
+            self.tar[i]-=np.nanmin(self.tar[i])
+            self.tar[i]/=np.max(self.tar[i])
     def __len__(self)->int:
         return self.tar.shape[1]-1
     def __getitem__(self,idx:int)->list:
@@ -109,11 +146,11 @@ def train_loop(dataLoad:tr.utils.data.DataLoader,model,loss_fn,optimizer,scale=1
     model.train()
     train_loss=0
     for x,y in dataLoad:
-        pred=model(x)
-        loss=loss_fn(pred,y)
+        pred,mu,logvar=model(x)
+        loss=loss_fn(pred,y,mu,logvar)
+        optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        optimizer.zero_grad()
         train_loss+=loss.item()
     return train_loss*scale
 
@@ -122,8 +159,8 @@ def test_loop(dataLoad:tr.utils.data.DataLoader,model,loss_fn,scale=100):
     test_loss=0
     with tr.torch.no_grad():
         for x,y in dataLoad:
-            pred=model(x)
-            test_loss+=loss_fn(pred,y).item()
+            pred,mu,logvar=model(x)
+            test_loss+=loss_fn(pred,y,mu,logvar).item()
     return test_loss*scale
 
 def split_data(data,ratio_train,ratio_test,batch_size):
@@ -151,8 +188,9 @@ def random_opti(histVar,number,batch_size,midlayer,h,learning_rate,dropout,loss_
     models=[]
     for i in range(number):
         va={}
-        va["Model"]=Autoencoder(ml[i],do[i]).to("cpu")
-        va["Data"]=(hv[i],bs[i])
+        va["Model"]=VariationalAutoencoder(ml[i],do[i]).to("cpu")
+        va["Data"]=(hv[i],bs[i],ml[i])
+        va["Weights"]=va["Model"].state_dict()
         va["Optimizer"]=tr.optim.Adam(va["Model"].parameters(),lr=lr[i])
         models.append(va)
 
@@ -161,7 +199,7 @@ def random_opti(histVar,number,batch_size,midlayer,h,learning_rate,dropout,loss_
     uu=np.unique(np.array([hv,bs]).transpose(),axis=0)
     for i in uu:
         da[tuple(i)]={}
-        data=TickData(logHistVar,i[0])
+        data=TickData(histVar,i[0])
         train_loader,test_loader,valid_loader=split_data(data,ratio_train,ratio_test,int(i[1]))
         da[tuple(i)]["Train"]=train_loader
         da[tuple(i)]["Test"]=test_loader
@@ -170,6 +208,7 @@ def random_opti(histVar,number,batch_size,midlayer,h,learning_rate,dropout,loss_
     #Train
     #id=np.array([x for x in range(0,number,1)])
     id=np.ones(number,dtype=bool)
+    removedId=np.ones(number,dtype=bool)
     err=np.zeros((epoch,number,2))
     st=ti.time()
     best=np.inf
@@ -179,8 +218,8 @@ def random_opti(histVar,number,batch_size,midlayer,h,learning_rate,dropout,loss_
             print(f"Model remaining: {id.sum()}/{number}")
         for j,mod_id in enumerate(id):
             if mod_id==1:
-                err[i,j,0]=train_loop(da[models[j]["Data"]]["Train"],models[j]["Model"],loss_fn,models[j]["Optimizer"])
-                err[i,j,1]=test_loop(da[models[j]["Data"]]["Valid"],models[j]["Model"],loss_fn)
+                err[i,j,0]=train_loop(da[models[j]["Data"][:2]]["Train"],models[j]["Model"],loss_fn,models[j]["Optimizer"])
+                err[i,j,1]=test_loop(da[models[j]["Data"][:2]]["Valid"],models[j]["Model"],loss_fn)
                 if i>0:
                     if err[i,j,1]>err[i-1,j,1]:#Overfitting
                         id[j]=0
@@ -195,14 +234,22 @@ def random_opti(histVar,number,batch_size,midlayer,h,learning_rate,dropout,loss_
                 if mod_id:
                     if np.isnan(err[i,j,1]):#Nan value for loss function
                         id[j]=False
+                        removedId[j]=False
+                        err[i,j]=np.zeros(2)
                         continue
                     rate=(err[i,j,1]-err[i-early_lim,j,1])/err[i-early_lim,j,1]
                     if err[i,j,1]>early_ratio*best:#Loss worst than x percent of the current best
                         id[j]=False
+                        removedId[j]=False
+                        err[i,j]=np.zeros(2)
                     elif rate>0:
                         id[j]=False
+                        err[i,j]=np.zeros(2)
                     elif -rate<early_rate:#Rate of improvement close to zero
                         id[j]=False
+                        err[i,j]=np.zeros(2)
+                    else:
+                        models[j]["Weights"]=models[j]["Model"].state_dict()
         if id.sum()==0:#Kill if there is nothing to optimize anymore
             print("\nAll models converged or got killed")
             break
@@ -218,11 +265,13 @@ def random_opti(histVar,number,batch_size,midlayer,h,learning_rate,dropout,loss_
                 print(f"Time: {tt:.1f}m\n")
             else:
                 print(f"Time: {tt:.1f}s\n")
-        
+    models=np.array(models)[removedId]   
+    err=err[:,removedId]
+
     #Test
-    final=np.zeros(number)
+    final=np.zeros(len(models))
     for x,mod in enumerate(models):
-        final[x]=test_loop(da[mod["Data"]]["Test"],mod["Model"],loss_fn)
+        final[x]=test_loop(da[mod["Data"][:2]]["Test"],mod["Model"],loss_fn)
 
     #Calculate R2
     print("\nCalculating R2")
@@ -242,8 +291,8 @@ def random_opti(histVar,number,batch_size,midlayer,h,learning_rate,dropout,loss_
         sst=np.sum((tar-tar.mean())**2)
         r2[nb]=1-ssr/sst
 
-    param=[bs,ml[:,-1],ml[:,1],hv,do,lr,r2,final]
-    return {"Model":models,"Test":final,"Valid":err,"Param":param,"r2":r2}
+    param=[bs[removedId],ml[removedId,-1],ml[removedId,1],hv[removedId],do[removedId],lr[removedId],r2,final]
+    return {"Weights":[x["Weights"] for x in models],"Model":[x["Data"] for x in models],"Test":final,"Valid":err,"Param":param,"r2":r2}
 
 def gen_mode(h,ms,ls):
     po=np.array([(x,x//y,z) for x in h for y in ms for z in ls])
