@@ -221,7 +221,9 @@ def random_opti(histVar,number,batch_size,midlayer,h,learning_rate,dropout,loss_
                 err[i,j,0]=train_loop(da[models[j]["Data"][:2]]["Train"],models[j]["Model"],loss_fn,models[j]["Optimizer"])
                 err[i,j,1]=test_loop(da[models[j]["Data"][:2]]["Valid"],models[j]["Model"],loss_fn)
                 if i>0:
-                    if err[i,j,1]>err[i-1,j,1]:#Overfitting
+                    if err[i,j,1]>err[i-1,j,1]:#Overfitting validation
+                        id[j]=0
+                    elif err[i,j,0]>err[i-1,j,0]:#Train loss increase
                         id[j]=0
         #Kill bad performer
         if i%early_lim==0 and i>0:#Kill based on criterion

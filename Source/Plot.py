@@ -48,21 +48,31 @@ def customSuptitle(text,fig, **kwargs):
 def customTitle(text, **kwargs):
     return plt.title(text,fontfamily="cambria",fontweight="bold",size=16,**kwargs)
 
-def plotProb(coded,ncluster,msd,thr):
-    fig,ax=plt.subplots()
-    gmm=sk.mixture.GaussianMixture(n_components=ncluster,covariance_type="full")
-    gmm.fit(coded)
-    prob=gmm.predict_proba(coded)
-    ax.plot(prob[:,0])
-    ax.set_xlabel("6 month rolling window")
-    ax.set_ylabel("Stress score")
-    for i in np.where(msd>thr)[0]:
-        ax.axvline(x=i,color='black',alpha=0.4,linestyle="--")
-    """ax.axhline(y=0.5,color='black')
-    ax2=ax.twinx()
+def plotProb(histVar,msd,win,prob,title,lab):
+    ret=np.array(histVar.rolling(win).mean().dropna())[:-1].mean(axis=1)
+    vol=np.array(histVar.rolling(win).std().dropna())[:-1].mean(axis=1)
+    fig,ax=plt.subplots(1,3,figsize=(11,3))
+    customSuptitle(title,fig)
+    for i in range(3):
+        ax[i].plot(prob)
+        ax[i].set_xlabel("6 month rolling window")
+        ax[i].set_ylabel(lab)
+        ax[i].axhline(y=0.5,color=colLines[0],linewidth=0.5)
+    ax2=ax[0].twinx()
     #ax2.plot(msd,color="gray",alpha=0.3)
     ax2.set_ylabel("Mean Squared Displacement",color="gray")
-    ax2.fill_between(np.arange(0,len(msd)),msd,0,color="gray",alpha=0.3)"""
+    ax2.fill_between(np.arange(0,len(msd)),msd,0,color="gray",alpha=0.5)
+
+    ax3=ax[1].twinx()
+    #ax2.plot(msd,color="gray",alpha=0.3)
+    ax3.set_ylabel("Return",color="gray")
+    ax3.plot(ret,color="gray",alpha=0.5)
+
+    ax4=ax[2].twinx()
+    #ax2.plot(msd,color="gray",alpha=0.3)
+    ax4.set_ylabel("Volatility",color="gray")
+    ax4.plot(vol,color="gray",alpha=0.5)
+    plt.tight_layout()
     plt.show()
 
 def plotClusterDim(la,coded,title):
@@ -100,66 +110,89 @@ def plotClusterScores(r,coded,ddbscan,min_db):
     plt.tight_layout()
     plt.show()
 
-def plotClusterMean(histVar,la,title,win,lim1,lim2,p=0.05):
+def plotClusterMean(histVar,la,title,win,lim,lab,p=0.05):
     ret=np.array(histVar.rolling(win).mean().dropna())[:-1]
     vol=np.array(histVar.rolling(win).std().dropna())[:-1]
+    ske=np.array(histVar.rolling(win).skew().dropna())[:-1]
+    kur=np.array(histVar.rolling(win).kurt().dropna())[:-1]
+    cumret=np.array(histVar.rolling(win).apply(lambda x: x.prod()-1).dropna())[:-1]
+    z=np.array(((histVar.rolling(win).mean()-histVar.mean())/histVar.std()).dropna())[:-1]
     r1=[]
     v1=[]
+    s1=[]
+    k1=[]
+    c1=[]
+    z1=[]
     anova=[]
     for i in range(len(la)):
         rr=[]
         vv=[]
+        s2=[]
+        kk=[]
+        cc=[]
+        zz=[]
         for j in np.unique(la[0]):
             mask=la[i]==j
             rr.append(ret[mask].mean(axis=1))
             vv.append(vol[mask].mean(axis=1))
+            s2.append(ske[mask].mean(axis=1))
+            kk.append(kur[mask].mean(axis=1))
+            cc.append(cumret[mask].mean(axis=1))
+            zz.append(z[mask].mean(axis=1))
         r1.append(rr)
         v1.append(vv)
+        s1.append(s2)
+        k1.append(kk)
+        c1.append(cc)
+        z1.append(zz)
+    tot=[r1,v1,s1,k1,c1,z1]
     for i in range(len(r1)):
         an=[]
         for j in range(len(r1[i])):
             ann=[]
             for l in range(len(r1[i])):
-                ann.append([scp.f_oneway(r1[i][j],r1[i][l]).pvalue,scp.f_oneway(v1[i][j],v1[i][l]).pvalue])
+                ann.append([scp.f_oneway(r1[i][j],r1[i][l]).pvalue,scp.f_oneway(v1[i][j],v1[i][l]).pvalue,scp.f_oneway(s1[i][j],s1[i][l]).pvalue,scp.f_oneway(k1[i][j],k1[i][l]).pvalue,scp.f_oneway(c1[i][j],c1[i][l]).pvalue,scp.f_oneway(z1[i][j],z1[i][l]).pvalue])
             an.append(ann)
         tmp=np.array(an)
         anova.append((tmp<=p).astype(int))
-    fig,ax=plt.subplots(2,len(la),figsize=(10,4))
+    fig,ax=plt.subplots(len(tot),len(la),figsize=(10,10))
     plt.subplots_adjust(wspace=0,hspace=0)
     for i in range(len(la)):
-        cl=len(np.unique(la[i]))
-        ax[0,i].set_title(title[i])
-        ax[0,i].violinplot(r1[i],showmeans=True)
-        ax[0,i].set_ylim(lim1)
-        ax[1,i].violinplot(v1[i],showmeans=True)
-        ax[1,i].set_ylim(lim2)
-        ax[1,i].set_xticks(range(1,cl+1),[f"Cluster {x+1}" for x in range(cl)])
-        plt.setp(ax[1,i].get_xticklabels(),rotation=45)
-        if i>0:
-            ax[0,i].set_xticks([])
-            ax[0,i].set_yticks([])
-            ax[1,i].set_yticks([])
-        else:
-            ax[0,i].set_ylabel("Return")
-            ax[1,i].set_ylabel("Volatility")
+        for j in range(len(tot)):
+            cl=len(np.unique(la[i]))
+            ax[j,i].violinplot(tot[j][i],showmeans=True)
+            ax[j,i].set_ylim(lim[j])
+            if j>=len(tot)-1:
+                ax[j,i].set_xticks(range(1,cl+1),[f"Cluster {x+1}" for x in range(cl)])
+                plt.setp(ax[j,i].get_xticklabels(),rotation=45)
+            elif j==0:
+                ax[j,i].set_title(title[i])
+                ax[j,i].set_xticks([])
+            else:
+                ax[j,i].set_xticks([])
+            if i==0:
+                ax[j,i].set_ylabel(lab[j])
+            else:
+                ax[j,i].set_yticks([])
     plt.show()
-    fig,ax=plt.subplots(2,len(la),figsize=(9,4.5))
+    fig,ax=plt.subplots(len(tot),len(la),figsize=(9,13.5))
     plt.subplots_adjust(wspace=0,hspace=0)
     for i in range(len(anova)):
-        ax[0,i].set_title(title[i])
-        ax[0,i].imshow(anova[i][:,:,0],cmap=cmap3,vmin=-1,vmax=1)
-        ax[0,i].set_xticks([])
-        ax[1,i].imshow(anova[i][:,:,1],cmap=cmap3,vmin=-1,vmax=1)
-        ax[1,i].set_xticks(range(cl),[f"Cluster {x+1}" for x in range(cl)])
-        ax[1,i].set_yticks(range(cl),[f"Cluster {x+1}" for x in range(cl)])
-        ax[0,i].set_yticks(range(cl),[f"Cluster {x+1}" for x in range(cl)])
-        plt.setp(ax[1,i].get_xticklabels(),rotation=45)
-        if i>0:
-            ax[0,i].set_yticks([])
-            ax[1,i].set_yticks([])
-        else:
-            ax[0,i].set_ylabel("Return")
-            ax[1,i].set_ylabel("Volatility")
+        for j in range(len(tot)):
+            ax[j,i].imshow(anova[i][:,:,j],cmap=cmap3,vmin=-1,vmax=1)
+            if j>=len(tot)-1:
+                ax[j,i].set_xticks(range(cl),[f"Cluster {x+1}" for x in range(cl)])
+                plt.setp(ax[j,i].get_xticklabels(),rotation=45)
+            elif j==0:
+                ax[j,i].set_title(title[i])
+                ax[j,i].set_xticks([])
+            else:
+                ax[j,i].set_xticks([])
+            if i==0:
+                ax[j,i].set_yticks(range(cl),[f"Cluster {x+1}" for x in range(cl)])
+                ax[j,i].set_ylabel(lab[j])
+            else:
+                ax[j,i].set_yticks([])
     plt.show()
 
 def plotEPS(coded,nb):
