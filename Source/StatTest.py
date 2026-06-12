@@ -6,18 +6,20 @@ import scipy.stats as scp
 import pandas as pan
 import scipy.optimize as op
 
-def autocorrelation(x):
+def autocorrelation(x:np.array)->np.array:
+    """
+    Calculate autocorrelation
+
+    Parameters:
+        x (np.array): Data to analyze
+
+    Returns:
+        Autocorrelation
+    """
     y=x-np.mean(x)
     res=np.correlate(y,y,mode='full')
     acf=res[res.size//2:]
     return acf/acf[0]
-
-def prob_cluster(x,center):
-    #Softmax over distances
-    d0=np.linalg.norm(x-center[0],axis=1)
-    d1=np.linalg.norm(x-center[1],axis=1)
-    p1=np.exp(-d1)/(np.exp(-d0)+np.exp(-d1))
-    return 1-p1
 
 def normalityTest(data:pan.DataFrame, alpha:float=0.05)->pan.DataFrame:
     """

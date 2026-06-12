@@ -43,12 +43,44 @@ plt.rcParams["axes.facecolor"]=colBack[-1]
 
 #Functions
 def customSuptitle(text,fig, **kwargs):
+    """
+    custom suptitle function for formatting
+
+    Parameters:
+        text (str): Title
+
+    Returns:
+        None, plot directly
+    """
     return fig.suptitle(text,fontfamily="cambria",fontweight="bold",size=16,**kwargs)
 
-def customTitle(text, **kwargs):
+def customTitle(text:str, **kwargs)->plt.title:
+    """
+    custom title function for formatting
+
+    Parameters:
+        text (str): Title
+
+    Returns:
+        None, plot directly
+    """
     return plt.title(text,fontfamily="cambria",fontweight="bold",size=16,**kwargs)
 
-def plotProb(histVar,msd,win,prob,title,lab):
+def plotProb(histVar:pan.DataFrame,msd:np.array,prob:np.array,win:int,title:str,lab:str)->None:
+    """
+    Plot probability to be in a certain cluster alongside MSD, volatility and return
+
+    Parameters:
+        histVar (pan.DataFrame): Historical return data
+        msd (np.array): Mean Squared Displacement in the latent space
+        prob (np.array): Probability to be in one of the cluster
+        win (int): Rolling window size
+        title (str): Title of the plot
+        lab (str): Label of the y axis
+
+    Returns:
+        None, plot directly
+    """
     ret=np.array(histVar.rolling(win).mean().dropna())[:-1].mean(axis=1)
     vol=np.array(histVar.rolling(win).std().dropna())[:-1].mean(axis=1)
     fig,ax=plt.subplots(1,3,figsize=(11,3))
@@ -75,8 +107,23 @@ def plotProb(histVar,msd,win,prob,title,lab):
     plt.tight_layout()
     plt.show()
 
-def plotClusterDim(la,coded,title):
-    fig,ax=plt.subplots(1,len(la),figsize=(11,3))
+def plotClusterDim(la:list,coded:np.array,title:str)->None:
+    """
+    Plot cluster labelled latent space
+
+    Parameters:
+        la (list): Cluster label list
+        coded (np.array): Latent space
+        title (str): Title of the plot
+
+    Returns:
+        None, plot directly
+
+    Notes:
+        - If latent space if bigger than 2, t-SNE is used to reduce dimensions
+    """
+    fig,ax=plt.subplots(1,len(la),figsize=(11,5))
+    customSuptitle("Latent space clustering",fig)
     if coded.shape[1]==2:
         tsne=coded
         lab=("Autoencoder 1","Autoencoder 2")
@@ -94,9 +141,22 @@ def plotClusterDim(la,coded,title):
         ax[i].set_title(title[i])
     plt.show()
 
-def plotClusterScores(r,coded,ddbscan,min_db):
+def plotClusterScores(r:np.array,coded:np.array,ddbscan:float,min_db:int)->None:
+    """
+    Compute Silouhette, Calinsky Harabasz and Davies Bouldin scores as function of number of cluster
+
+    Parameters:
+        r (np.array): List of the different cluster to test
+        coded (np.array): Latent space
+        ddbscan (float): Min cluster size for HDBSCAN
+        min_db (int): Min samples for DBSCAN
+
+    Returns:
+        None, plot directly
+    """
     silhouette,ch,db=clusterData(r,coded,ddbscan,min_db,min_db)
     fig,ax=plt.subplots(1,3,figsize=(12,3))
+    customSuptitle("Cluster scores",fig)
     ax[0].plot(r,silhouette)
     ax[0].set_xlabel("Number of clusters")
     ax[0].set_ylabel("Silhouette Score")
@@ -110,7 +170,22 @@ def plotClusterScores(r,coded,ddbscan,min_db):
     plt.tight_layout()
     plt.show()
 
-def plotClusterMean(histVar,la,title,win,lim,lab,p=0.05):
+def plotClusterMean(histVar:pan.DataFrame,la:list,title:str,win:int,lim:list,lab:list,p:float=0.05)->None:
+    """
+    Compute violin plot for each parameter for each clustering method
+
+    Parameters:
+        histVar (pan.DataFrame): List of name of each parameter
+        la (list): Cluster label list
+        title (str): Title of the figure
+        win (int): Rolling window
+        lim (list): y limit for each plot
+        lab (list): y label
+        p=0.05 (float): precision for the annova
+
+    Returns:
+        None, plot directly
+    """
     ret=np.array(histVar.rolling(win).mean().dropna())[:-1]
     vol=np.array(histVar.rolling(win).std().dropna())[:-1]
     ske=np.array(histVar.rolling(win).skew().dropna())[:-1]
@@ -156,6 +231,7 @@ def plotClusterMean(histVar,la,title,win,lim,lab,p=0.05):
         tmp=np.array(an)
         anova.append((tmp<=p).astype(int))
     fig,ax=plt.subplots(len(tot),len(la),figsize=(10,10))
+    customSuptitle("Cluster feature distributions",fig)
     plt.subplots_adjust(wspace=0,hspace=0)
     for i in range(len(la)):
         for j in range(len(tot)):
@@ -176,6 +252,7 @@ def plotClusterMean(histVar,la,title,win,lim,lab,p=0.05):
                 ax[j,i].set_yticks([])
     plt.show()
     fig,ax=plt.subplots(len(tot),len(la),figsize=(9,13.5))
+    customSuptitle("Cluster's ANOVA test",fig)
     plt.subplots_adjust(wspace=0,hspace=0)
     for i in range(len(anova)):
         for j in range(len(tot)):
@@ -195,30 +272,21 @@ def plotClusterMean(histVar,la,title,win,lim,lab,p=0.05):
                 ax[j,i].set_yticks([])
     plt.show()
 
-def plotEPS(coded,nb):
-    nbnn=sk.neighbors.NearestNeighbors(n_neighbors=nb).fit(coded)
-    dist,id=nbnn.kneighbors(coded)
-    k_dist=np.sort(dist[:,nb-1])
-    plt.plot(k_dist)
-    plt.xlabel("Neighbor")
-    plt.ylabel("Distance")
-    plt.show()
 
-def plot3D(coded):
-    fig,ax=plt.subplots(1,3,figsize=(10,4))
-    ax[0].scatter(coded[:,0],coded[:,1],c=np.arange(0,len(coded)),cmap=cmap)
-    ax[0].set_xlabel("Autoencoder 1")
-    ax[0].set_ylabel("Autoencoder 2")
-    ax[1].scatter(coded[:,0],coded[:,2],c=np.arange(0,len(coded)),cmap=cmap)
-    ax[1].set_ylabel("Autoencoder 1")
-    ax[1].set_xlabel("Autoencoder 3")
-    ax[2].scatter(coded[:,1],coded[:,2],c=np.arange(0,len(coded)),cmap=cmap)
-    ax[2].set_ylabel("Autoencoder 2")
-    ax[2].set_xlabel("Autoencoder 3")
-    plt.tight_layout()
-    plt.show()
+def plotLatent(coded:np.array,nb:int)->None:
+    """
+    Plot MSD, 1st and 2nd order displacement, latent space and distance to neightboor
 
-def plotLatent(coded,nb):
+    Parameters:
+        coded (np.array): List of name of each parameter
+        nb (int): Number of cluster
+
+    Returns:
+        None, plot directly
+
+    Notes:
+        - If latent space if bigger than 2, t-SNE is used to reduce dimensions
+    """
     nbnn=sk.neighbors.NearestNeighbors(n_neighbors=nb).fit(coded)
     dist,id=nbnn.kneighbors(coded)
     k_dist=np.sort(dist[:,nb-1])
@@ -229,6 +297,7 @@ def plotLatent(coded,nb):
         vel[i]=np.linalg.norm(coded[i]-coded[i+1])
     acc=vel[1:]-vel[:-1]
     fig,ax=plt.subplots(1,5,figsize=(15,4))
+    customSuptitle("Latent space",fig)
     if coded.shape[1]==2:
         tsne=coded
         lab=("Autoencoder 1","Autoencoder 2")
@@ -254,9 +323,20 @@ def plotLatent(coded,nb):
     plt.show()
     return msd,vel,acc
 
-def plotParamNN(name,opti):
+def plotParamNN(name:list,opti:dict)->None:
+    """
+    Make a table of scatter plot between every parameters
+
+    Parameters:
+        name (list): List of name of each parameter
+        opti (dict): Data to plot
+
+    Returns:
+        None, plot directly
+    """
     lon=len(opti["Param"])
     fig,ax=plt.subplots(lon,lon,figsize=(16,16))
+    customSuptitle("Hyperparameters correlation",fig)
     plt.subplots_adjust(wspace=0,hspace=0)
     for i in range(lon):
         for j in range(lon):
@@ -277,7 +357,17 @@ def plotParamNN(name,opti):
                 ax[j,i].set_ylabel(name[j])
     plt.show()
 
-def plotNNProgess(opti,perc):
+def plotNNProgess(opti:dict,perc:float)->None:
+    """
+    Show loss as function of epoch. Right plot show a zoom in.
+
+    Parameters:
+        opti (dict): Data to plot
+        perc (float): Percent above the minimum to show for the right panel
+
+    Returns:
+        None, plot directly
+    """
     progress=opti["Valid"][:,:,1].copy()
     progress[progress==0]=np.nan
     top=np.zeros(progress.shape[1])
@@ -287,6 +377,7 @@ def plotNNProgess(opti,perc):
     top=np.argsort(top)
     progress=progress[:,top]
     fig,ax=plt.subplots(1,2,figsize=(16,6))
+    customSuptitle("Loss over epochs",fig)
     ax[0].set_prop_cycle(schemeGray)
     ax[1].set_prop_cycle(schemeGray)
     for i in range(1,progress.shape[1]):
