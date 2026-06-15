@@ -12,4 +12,5 @@ Data/
 *.docx
 *.txt
 *.pth
+*.tmp
 Results/model.json
